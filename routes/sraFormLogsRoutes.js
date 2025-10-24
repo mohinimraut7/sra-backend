@@ -62,5 +62,7 @@ router.put(
 
 
 router.get('/dashboard-stats', authMiddleware, sraFormLogsController.getSRADashboardStats);
+router.delete('/deletesradocs', authMiddleware, sraFormLogsController.deleteAllSRADocs);
+
 
 module.exports = router;

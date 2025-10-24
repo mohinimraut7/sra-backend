@@ -1,5 +1,10 @@
 const db = require('../config/db');
 
+const fs = require('fs');
+const path = require('path');
+
+
+
 exports.submitSRAFormLog = async (req, res) => {
   try {
     const data = req.body;
@@ -208,4 +213,44 @@ exports.getSRADashboardStats = (req, res) => {
   )
     .then(() => res.json(results))
     .catch((err) => res.status(500).json({ message: 'Failed to fetch stats', err }));
+};
+
+
+// ✅ Delete all files inside "uploads/sra_docs"
+exports.deleteAllSRADocs = (req, res) => {
+  const folderPath = path.join(__dirname, '..', 'uploads', 'sra_docs');
+
+  // Check if folder exists
+  if (!fs.existsSync(folderPath)) {
+    return res.status(404).json({ success: false, message: 'Folder not found' });
+  }
+
+  try {
+    // Read all files in the folder
+    const files = fs.readdirSync(folderPath);
+
+    // Delete each file
+    files.forEach((file) => {
+      const filePath = path.join(folderPath, file);
+      if (fs.lstatSync(filePath).isFile()) {
+        fs.unlinkSync(filePath);
+      } else if (fs.lstatSync(filePath).isDirectory()) {
+        // Optional: recursively delete subfolders (if any)
+        fs.rmSync(filePath, { recursive: true, force: true });
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'All files in uploads/sra_docs deleted successfully',
+      deletedCount: files.length
+    });
+  } catch (error) {
+    console.error('Error deleting files:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting SRA documents',
+      error: error.message
+    });
+  }
 };
