@@ -13,13 +13,14 @@ function generateUniqueUserId() {
 }
 
 exports.register = async (req, res) => {
-  const { name, email, password, role, district, taluka } = req.body;
+  const { name, email,mobileNumber,password, role, district, taluka } = req.body;
   const hashedPassword = await bcrypt.hash(password, 10);
   const uniqueUserId = generateUniqueUserId();
 
   const user = {
     name,
     email,
+    mobileNumber,
     password: hashedPassword,
     role,
     district,
@@ -34,6 +35,49 @@ exports.register = async (req, res) => {
     res.status(201).json({ message: 'User registered successfully' });
   });
 };
+
+
+
+exports.editUser = async (req, res) => {
+  const { id } = req.params;
+  const { name, email, mobileNumber, role, district, taluka } = req.body;
+
+  if (!id) {
+    return res.status(400).json({ message: "User ID is required" });
+  }
+
+  // Collect only provided fields dynamically
+  const updatedFields = {};
+  if (name) updatedFields.name = name;
+  if (email) updatedFields.email = email;
+  if (mobileNumber) updatedFields.mobileNumber = mobileNumber;
+  if (role) updatedFields.role = role;
+  if (district) updatedFields.district = district;
+  if (taluka) updatedFields.taluka = taluka;
+
+  if (Object.keys(updatedFields).length === 0) {
+    return res.status(400).json({ message: "No fields to update" });
+  }
+
+  updatedFields.updated_at = new Date();
+
+  const sql = `UPDATE users SET ? WHERE id = ?`;
+
+  db.query(sql, [updatedFields, id], (err, result) => {
+    if (err) {
+      return res.status(500).json({ message: "Failed to update user", err });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    logEvent(email ?? id, "USER_UPDATED", req);
+
+    res.status(200).json({ message: "User updated successfully" });
+  });
+};
+
 
 exports.login = (req, res) => {
   console.log("fffhfhfhf",process.env.JWT_SECRET)
@@ -59,6 +103,7 @@ exports.login = (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
+        mobileNumber:user.mobileNumber,
         role: user.role,
         district: user.district,   
         taluka: user.taluka       
@@ -120,6 +165,42 @@ function logEvent(emailOrId, action, req) {
   console.log(`📢 ${action} by ${userEmail} from ${ip} on route ${route}`);
 }
 
+// exports.getAllUsersWithLastLogin = (req, res) => {
+//   const sql = `
+//     SELECT 
+//       u.id,
+//       u.user_id,
+//       u.name,
+//       u.email,
+//       u.role,
+//       u.district,
+//       u.taluka,
+//       DATE_FORMAT(u.created_at, '%Y-%m-%d') AS created_date,
+//       DATE_FORMAT(u.created_at, '%H:%i:%s') AS created_time,
+//       (
+//         SELECT DATE_FORMAT(MAX(l.timestamp), '%Y-%m-%d')
+//         FROM logs l 
+//         WHERE l.user_email = u.email AND l.action = 'LOGIN_SUCCESS'
+//       ) AS last_login_date,
+//       (
+//         SELECT DATE_FORMAT(MAX(l.timestamp), '%H:%i:%s')
+//         FROM logs l 
+//         WHERE l.user_email = u.email AND l.action = 'LOGIN_SUCCESS'
+//       ) AS last_login_time
+//     FROM users u
+//     ORDER BY u.created_at DESC
+//   `;
+
+//   db.query(sql, (err, results) => {
+//     if (err) return res.status(500).json({ message: 'Failed to fetch users', err });
+//     res.json(results);
+//   });
+// };
+
+
+// -------------------------------------------------------------------
+
+
 exports.getAllUsersWithLastLogin = (req, res) => {
   const sql = `
     SELECT 
@@ -127,21 +208,14 @@ exports.getAllUsersWithLastLogin = (req, res) => {
       u.user_id,
       u.name,
       u.email,
+      u.mobileNumber,
       u.role,
       u.district,
       u.taluka,
       DATE_FORMAT(u.created_at, '%Y-%m-%d') AS created_date,
       DATE_FORMAT(u.created_at, '%H:%i:%s') AS created_time,
-      (
-        SELECT DATE_FORMAT(MAX(l.timestamp), '%Y-%m-%d')
-        FROM logs l 
-        WHERE l.user_email = u.email AND l.action = 'LOGIN_SUCCESS'
-      ) AS last_login_date,
-      (
-        SELECT DATE_FORMAT(MAX(l.timestamp), '%H:%i:%s')
-        FROM logs l 
-        WHERE l.user_email = u.email AND l.action = 'LOGIN_SUCCESS'
-      ) AS last_login_time
+      DATE_FORMAT(u.created_at, '%Y-%m-%d') AS last_login_date,
+      DATE_FORMAT(u.created_at, '%H:%i:%s') AS last_login_time
     FROM users u
     ORDER BY u.created_at DESC
   `;
@@ -153,3 +227,37 @@ exports.getAllUsersWithLastLogin = (req, res) => {
 };
 
 
+// ===================== DELETE USER API ===================== //
+
+exports.deleteUser = (req, res) => {
+  const userIdToDelete = req.params.id; // User ID to delete
+  const loggedInUserId = req.user.id;   // Logged-in user's ID (from token)
+
+  // Prevent deleting yourself
+  if (parseInt(userIdToDelete) === loggedInUserId) {
+    return res.status(400).json({ message: "You cannot delete your own account!" });
+  }
+
+  // Check if user exists before deleting
+  const checkSql = `SELECT email FROM users WHERE id = ?`;
+  db.query(checkSql, [userIdToDelete], (err, result) => {
+    if (err) return res.status(500).json({ message: "Check failed", err });
+
+    if (result.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const userEmail = result[0].email;
+
+    // Delete query
+    const deleteSql = `DELETE FROM users WHERE id = ?`;
+    db.query(deleteSql, [userIdToDelete], (err2, result2) => {
+      if (err2) return res.status(500).json({ message: "Delete failed", err: err2 });
+
+      // Log delete action
+      logEvent(userEmail, "USER_DELETED", req);
+
+      res.json({ message: "User deleted successfully" });
+    });
+  });
+};

@@ -29,4 +29,6 @@ router.put("/update/:id", authMiddleware, clusterController.updateCluster);
 // ❌ Delete a cluster
 router.delete("/delete/:id", authMiddleware, clusterController.deleteCluster);
 
+router.get('/cluster/:id', authMiddleware, clusterController.getClusterById);
+
 module.exports = router;

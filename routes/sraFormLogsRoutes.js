@@ -23,17 +23,49 @@ router.post(
     { name: 'submitted_docs_before_2000' },
     { name: 'description_doc_before_2000' },
     { name: 'after_2000_proof_submitted' },
-    { name: 'possession_doc_info' },
-    { name: 'Seldeclaration_letter' },
-    { name: 'Ration_card_info' },
+    { name: 'possession_doc_info' , maxCount: 20 },
+    { name: 'Seldeclaration_letter', maxCount: 20  },
+    { name: 'Ration_card_info', maxCount: 20  },
     { name: 'Voter_card_info' },
-    { name: 'Other_doc_info' }
+    { name: 'Other_doc_info' },
+    { name: 'sale_agreement', maxCount: 20 }   // allows up to 20 PDF pages
   ]),
   sraFormLogsController.submitSRAFormLog
 );
 
 
 router.get('/all-logs', authMiddleware, sraFormLogsController.getSRAFormLogs);
+
+// router.put(
+//   '/sra-form-logs/:id',
+//   authMiddleware,
+//   upload.fields([
+//     { name: 'photo_self' },
+//     { name: 'photo_family' },
+//     { name: 'biometric' },
+//     { name: 'doc_front_view' },
+//     { name: 'doc_side_view' },
+//     { name: 'video_inside' },
+//     { name: 'video_self_declaration' },
+//     { name: 'adivashihutimage' },
+//     { name: 'doc_before_2000' },
+//     { name: 'submitted_docs_before_2000' },
+//     { name: 'description_doc_before_2000' },
+//     { name: 'after_2000_proof_submitted' },
+//     { name: 'possession_doc_info' },
+//     { name: 'Seldeclaration_letter' },
+//     { name: 'Ration_card_info' },
+//     { name: 'Voter_card_info' },
+//     { name: 'Other_doc_info' },
+//   ]),
+//   sraFormLogsController.updateSRAFormLog
+// );
+
+
+
+// ... existing imports ...
+
+router.get('/sra-form-logs/:id', authMiddleware, sraFormLogsController.getSRAFormLogById);
 
 router.put(
   '/sra-form-logs/:id',
@@ -51,14 +83,18 @@ router.put(
     { name: 'submitted_docs_before_2000' },
     { name: 'description_doc_before_2000' },
     { name: 'after_2000_proof_submitted' },
-    { name: 'possession_doc_info' },
-    { name: 'Seldeclaration_letter' },
-    { name: 'Ration_card_info' },
+    { name: 'possession_doc_info', maxCount: 20 },
+    { name: 'Seldeclaration_letter', maxCount: 20 },
+    { name: 'Ration_card_info', maxCount: 20 },
     { name: 'Voter_card_info' },
     { name: 'Other_doc_info' },
+    { name: 'sale_agreement', maxCount: 20 }
   ]),
   sraFormLogsController.updateSRAFormLog
 );
+
+
+
 
 
 router.get('/dashboard-stats', authMiddleware, sraFormLogsController.getSRADashboardStats);
