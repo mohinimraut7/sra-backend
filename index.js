@@ -16,8 +16,14 @@ dotenv.config({ path: '.env.development' });  // explicitly load .env.developmen
 
 const app = express();
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// 1. JSON body parser – 150MB limit
+app.use(express.json({ limit: '150mb' }));
+
+// 2. URL-encoded body parser – 150MB limit (form-data साठी गरजेचं)
+app.use(express.urlencoded({ extended: true, limit: '150mb' }));
+
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: true }));
 
 app.use('/uploads/sra_docs', express.static(path.join(__dirname, 'uploads/sra_docs')));
 
