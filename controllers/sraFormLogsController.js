@@ -909,7 +909,9 @@ exports.updateSRAFormLog = async (req, res) => {
         const saleAgreementUrls = await Promise.all(
           files.sale_agreement.map(file => uploadToR2(file))
         );
-        updateData.sale_agreement = saleAgreementUrls;
+        // updateData.sale_agreement = saleAgreementUrls;
+        updateData.sale_agreement = JSON.stringify(saleAgreementUrls);
+
       }
 
       if (Object.keys(updateData).length === 0) {
