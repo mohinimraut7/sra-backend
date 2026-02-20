@@ -779,20 +779,49 @@ exports.submitSRAFormLog = async (req, res) => {
       inside_video_path: await uploadIfExists(files.video_inside),
       declaration_video_path: await uploadIfExists(files.video_self_declaration),
       adivashihutimage: await uploadIfExists(files.adivashihutimage),
-      doc_before_2000: await uploadIfExists(files.doc_before_2000),
+
+      // doc_before_2000: await uploadIfExists(files.doc_before_2000),
+doc_before_2000:
+  files.doc_before_2000 && files.doc_before_2000.length > 0
+    ? JSON.stringify(
+        await Promise.all(
+          files.doc_before_2000.map(file => uploadToR2(file))
+        )
+      )
+    : null,
+
       submitted_docs_before_2000: await uploadIfExists(files.submitted_docs_before_2000),
       description_doc_before_2000: await uploadIfExists(files.description_doc_before_2000),
-      after_2000_proof_submitted: await uploadIfExists(files.after_2000_proof_submitted),
+      // after_2000_proof_submitted: await uploadIfExists(files.after_2000_proof_submitted),
+
+       after_2000_proof_submitted:
+    files.after_2000_proof_submitted && files.after_2000_proof_submitted.length > 0
+      ? JSON.stringify(
+          await Promise.all(
+            files.after_2000_proof_submitted.map(file => uploadToR2(file))
+          )
+        )
+      : null,
+
       possession_doc_info: await uploadIfExists(files.possession_doc_info),
       Seldeclaration_letter: await uploadIfExists(files.Seldeclaration_letter),
       Ration_card_info: await uploadIfExists(files.Ration_card_info),
       Voter_card_info: await uploadIfExists(files.Voter_card_info),
       Other_doc_info: await uploadIfExists(files.Other_doc_info),
 
+      // sale_agreement:
+      //   files.sale_agreement && files.sale_agreement.length > 0
+      //     ? await Promise.all(files.sale_agreement.map(file => uploadToR2(file)))
+      //     : null,
+
       sale_agreement:
-        files.sale_agreement && files.sale_agreement.length > 0
-          ? await Promise.all(files.sale_agreement.map(file => uploadToR2(file)))
-          : null,
+  files.sale_agreement && files.sale_agreement.length > 0
+    ? JSON.stringify(
+        await Promise.all(
+          files.sale_agreement.map(file => uploadToR2(file))
+        )
+      )
+    : null,
     };
 
     const now = new Date();
