@@ -113,7 +113,15 @@ exports.login = (req, res) => {
     );
 
     logEvent(email, 'LOGIN_SUCCESS', req);
-    res.json({ token });
+    res.json({ token,user: {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    mobileNumber: user.mobileNumber,
+    role: user.role,
+    district: user.district,
+    taluka: user.taluka
+  } });
   });
 };
 
