@@ -13,7 +13,7 @@ function generateUniqueUserId() {
 }
 
 exports.register = async (req, res) => {
-  const { name, email,mobileNumber,password, role, district, taluka } = req.body;
+  const { name, email,mobileNumber,password, role, district, taluka,address } = req.body;
   const hashedPassword = await bcrypt.hash(password, 10);
   const uniqueUserId = generateUniqueUserId();
 
@@ -25,6 +25,7 @@ exports.register = async (req, res) => {
     role,
     district,
     taluka,
+    address,
     user_id: uniqueUserId
   };
 
@@ -40,7 +41,7 @@ exports.register = async (req, res) => {
 
 exports.editUser = async (req, res) => {
   const { id } = req.params;
-  const { name, email, mobileNumber, role, district, taluka } = req.body;
+  const { name, email, mobileNumber, role, district, taluka,address} = req.body;
 
   if (!id) {
     return res.status(400).json({ message: "User ID is required" });
@@ -54,6 +55,7 @@ exports.editUser = async (req, res) => {
   if (role) updatedFields.role = role;
   if (district) updatedFields.district = district;
   if (taluka) updatedFields.taluka = taluka;
+   if (address) updatedFields.address = address;
 
   if (Object.keys(updatedFields).length === 0) {
     return res.status(400).json({ message: "No fields to update" });
