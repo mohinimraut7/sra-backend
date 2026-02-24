@@ -82,7 +82,8 @@ exports.editUser = async (req, res) => {
 
 
 exports.login = (req, res) => {
-  console.log("fffhfhfhmmmmmmmmf",process.env.JWT_SECRET)
+  console.log("fffhfhfhm",process.env.JWT_SECRET)
+
   const { email, password } = req.body;
 
   findUserByEmail(email, async (err, results) => {
