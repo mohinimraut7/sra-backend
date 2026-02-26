@@ -109,7 +109,8 @@ exports.login = (req, res) => {
         mobileNumber:user.mobileNumber,
         role: user.role,
         district: user.district,   
-        taluka: user.taluka       
+        taluka: user.taluka, 
+        address:user.address     
       },
       process.env.JWT_SECRET,
       { expiresIn: '1d', issuer: 'wcd.maharashtra.gov.in' }
@@ -123,7 +124,8 @@ exports.login = (req, res) => {
     mobileNumber: user.mobileNumber,
     role: user.role,
     district: user.district,
-    taluka: user.taluka
+    taluka: user.taluka,
+    address:user.address    
   } });
   });
 };
@@ -158,12 +160,48 @@ exports.updateProfile = async (req, res) => {
   });
 };
 
+// exports.viewProfile = (req, res) => {
+//   const userId = req.user.id;
+//   const sql = 'SELECT id, user_id, name, email, role, district, taluka,FROM users WHERE id = ?';
+//   db.query(sql, [userId], (err, results) => {
+//     if (err || results.length === 0) return res.status(404).json({ message: 'User not found' });
+//     res.json(results[0]);
+//   });
+// };
+
 exports.viewProfile = (req, res) => {
   const userId = req.user.id;
-  const sql = 'SELECT id, user_id, name, email, role, district, taluka FROM users WHERE id = ?';
+
+  const sql = `
+    SELECT 
+      id, 
+      user_id, 
+      name, 
+      email, 
+      role, 
+      district, 
+      taluka,
+      address
+    FROM users 
+    WHERE id = ?
+  `;
+
   db.query(sql, [userId], (err, results) => {
-    if (err || results.length === 0) return res.status(404).json({ message: 'User not found' });
-    res.json(results[0]);
+    if (err) {
+      return res.status(500).json({ message: "Server error", error: err });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const user = results[0];
+
+    // 👇 Address force add (even if DB doesn't have it)
+    res.json({
+      ...user,
+      address: user.address || null
+    });
   });
 };
 
