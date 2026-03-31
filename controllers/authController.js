@@ -113,7 +113,9 @@ exports.login = (req, res) => {
         address:user.address     
       },
       process.env.JWT_SECRET,
-      { expiresIn: '1d', issuer: 'wcd.maharashtra.gov.in' }
+      // { expiresIn: '1d', issuer: 'wcd.maharashtra.gov.in' }
+            { issuer: 'wcd.maharashtra.gov.in' }
+
     );
 
     logEvent(email, 'LOGIN_SUCCESS', req);
