@@ -3,6 +3,7 @@ const dotenv = require('dotenv');
 const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
+const https = require('https'); // ✅ हे add कर top ला
 const rateLimiter = require('./middleware/rateLimiter');
 const sraFormLogsRoutes = require('./routes/sraFormLogsRoutes');
 const authRoutes = require('./routes/authRoutes');
@@ -28,7 +29,7 @@ app.use(express.urlencoded({ extended: true, limit: '150mb' }));
 app.use('/uploads/sra_docs', express.static(path.join(__dirname, 'uploads/sra_docs')));
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:61855', 'http://localhost:3000', 'http://43.205.212.92:3000'],
+  origin: ['http://localhost:5173', 'http://localhost:61855', 'http://localhost:3000', 'http://43.205.212.92:3000','https://sra.saavi.co.in','https://d2dsurvey.saavi.co.in' ],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -88,6 +89,38 @@ app.get('/api/use-of-hut', (req, res) => {
   ];
 
   res.status(200).json(hutUses);
+});
+
+
+
+// ✅ हे नवीन route add कर
+app.get('/api/proxy-image', (req, res) => {
+  const imageUrl = req.query.url;
+
+  if (!imageUrl) {
+    return res.status(400).json({ message: 'URL required' });
+  }
+
+  // if (!imageUrl.includes('r2.dev') && !imageUrl.includes('saavi.co.in')) {
+  //   return res.status(403).json({ message: 'URL not allowed' });
+  // }
+
+
+
+  const allowedDomains = ['r2.dev', 'saavi.co.in', 'amazonaws.com'];
+  const isAllowed = allowedDomains.some(domain => imageUrl.includes(domain));
+  if (!isAllowed) {
+    return res.status(403).json({ message: 'URL not allowed' });
+  }
+
+
+  https.get(imageUrl, (imageRes) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Content-Type', imageRes.headers['content-type'] || 'image/jpeg');
+    imageRes.pipe(res);
+  }).on('error', (err) => {
+    res.status(500).json({ message: 'Image fetch failed', error: err.message });
+  });
 });
 
 
