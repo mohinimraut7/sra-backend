@@ -24,13 +24,22 @@ app.use(express.json({ limit: '150mb' }));
 // 2. URL-encoded body parser – 150MB limit (form-data साठी गरजेचं)
 app.use(express.urlencoded({ extended: true, limit: '150mb' }));
 
-// app.use(express.json());
-// app.use(express.urlencoded({ extended: true }));
+
 
 app.use('/uploads/sra_docs', express.static(path.join(__dirname, 'uploads/sra_docs')));
 
+
+
+
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:61855', 'http://localhost:3000', 'http://43.205.212.92:3000','https://sra.saavi.co.in','https://d2dsurvey.saavi.co.in',true ],
+  origin: function(origin, callback) {
+    const allowedOrigins = ['http://localhost:5173', 'http://localhost:61855', 'http://localhost:3000', 'http://43.205.212.92:3000','https://sra.saavi.co.in','https://d2dsurvey.saavi.co.in'];
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true); // ✅ specific URLs + no-origin requests allow
+    } else {
+      callback(null, true); // ✅ baki saglyanna pan allow
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
