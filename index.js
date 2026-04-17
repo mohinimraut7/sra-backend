@@ -16,6 +16,7 @@ dotenv.config();
 dotenv.config({ path: '.env.development' });  // explicitly load .env.development
 
 const app = express();
+app.set('trust proxy', 1); // ✅ add केला
 
 // 1. JSON body parser – 150MB limit
 app.use(express.json({ limit: '150mb' }));
@@ -29,7 +30,7 @@ app.use(express.urlencoded({ extended: true, limit: '150mb' }));
 app.use('/uploads/sra_docs', express.static(path.join(__dirname, 'uploads/sra_docs')));
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:61855', 'http://localhost:3000', 'http://43.205.212.92:3000','https://sra.saavi.co.in','https://d2dsurvey.saavi.co.in' ],
+  origin: ['http://localhost:5173', 'http://localhost:61855', 'http://localhost:3000', 'http://43.205.212.92:3000','https://sra.saavi.co.in','https://d2dsurvey.saavi.co.in',true ],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
