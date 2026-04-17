@@ -6,6 +6,7 @@ const hutController = require('../controllers/hutController');
 router.post('/add', hutController.addHut);
 
 // GET: Get All Huts
+
 router.get('/all', hutController.getAllHuts);
 
 module.exports = router;
