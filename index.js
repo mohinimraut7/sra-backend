@@ -105,8 +105,6 @@ app.get('/api/proxy-image', (req, res) => {
   //   return res.status(403).json({ message: 'URL not allowed' });
   // }
 
-
-
   const allowedDomains = ['r2.dev', 'saavi.co.in', 'amazonaws.com'];
   const isAllowed = allowedDomains.some(domain => imageUrl.includes(domain));
   if (!isAllowed) {
