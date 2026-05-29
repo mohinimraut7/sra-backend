@@ -969,8 +969,185 @@ exports.updateSRAFormLog = async (req, res) => {
 };
 
 // ===================== DASHBOARD STATS =====================
+// exports.getSRADashboardStats = (req, res) => {
+//   const queries = { /* SAME AS YOUR ORIGINAL - UNCHANGED */ };
+
+//   const results = {};
+
+//   Promise.all(
+//     Object.keys(queries).map(
+//       (key) =>
+//         new Promise((resolve, reject) => {
+//           db.query(queries[key], (err, result) => {
+//             if (err) reject(err);
+//             results[key] = result;
+//             resolve();
+//           });
+//         })
+//     )
+//   )
+//     .then(() => res.json(results))
+//     .catch((err) => res.status(500).json({ message: "Failed to fetch stats", err }));
+// };
+
+
+// ===================== DASHBOARD STATS — FIXED =====================
+// sraController.js मध्ये हा function replace करा
+// Problem: queries object empty होता { /* SAME AS YOUR ORIGINAL */ }
+// Solution: सगळ्या queries परत add केल्या
+
 exports.getSRADashboardStats = (req, res) => {
-  const queries = { /* SAME AS YOUR ORIGINAL - UNCHANGED */ };
+  const queries = {
+    totalRecords: "SELECT COUNT(*) as count FROM sra_form_logs",
+
+    todayRecords: "SELECT COUNT(*) as count FROM sra_form_logs WHERE DATE(created_date) = CURDATE()",
+
+    maleRecords: "SELECT COUNT(*) as count FROM sra_form_logs WHERE gender = 'Male'",
+
+    photoSelfSubmitted: "SELECT COUNT(*) as count FROM sra_form_logs WHERE photo_self_path IS NOT NULL",
+
+    byDay: `
+      SELECT DATE_FORMAT(created_date, '%Y-%m-%d') as day, COUNT(*) as count
+      FROM sra_form_logs
+      WHERE created_date IS NOT NULL
+      GROUP BY day
+      ORDER BY day DESC
+      LIMIT 30
+    `,
+
+    byMonth: `
+      SELECT DATE_FORMAT(created_date, '%Y-%m') as month, COUNT(*) as count
+      FROM sra_form_logs
+      WHERE created_date IS NOT NULL
+      GROUP BY month
+      ORDER BY month DESC
+    `,
+
+    byGender: `
+      SELECT gender, COUNT(*) as count
+      FROM sra_form_logs
+      WHERE gender IS NOT NULL AND gender != ''
+      GROUP BY gender
+    `,
+
+    bySlumUse: `
+      SELECT slum_use, COUNT(*) as count
+      FROM sra_form_logs
+      WHERE slum_use IS NOT NULL AND slum_use != ''
+      GROUP BY slum_use
+      ORDER BY count DESC
+    `,
+
+    bySocietyRegistered: `
+      SELECT society_registered, COUNT(*) as count
+      FROM sra_form_logs
+      WHERE society_registered IS NOT NULL
+      GROUP BY society_registered
+    `,
+
+    byPlanSubmitted: `
+      SELECT plan_submitted, COUNT(*) as count
+      FROM sra_form_logs
+      WHERE plan_submitted IS NOT NULL
+      GROUP BY plan_submitted
+    `,
+
+    byMunicipalCorporation: `
+      SELECT municipal_corporation, COUNT(*) as count
+      FROM sra_form_logs
+      WHERE municipal_corporation IS NOT NULL AND municipal_corporation != ''
+      GROUP BY municipal_corporation
+      ORDER BY count DESC
+      LIMIT 10
+    `,
+
+    byDistrict: `
+      SELECT district, COUNT(*) as count
+      FROM sra_form_logs
+      WHERE district IS NOT NULL AND district != ''
+      GROUP BY district
+      ORDER BY count DESC
+      LIMIT 10
+    `,
+
+    bySurveyStatus: `
+      SELECT
+        CASE
+          WHEN survey_status IS NULL OR survey_status = '' THEN 'Pending'
+          ELSE survey_status
+        END as survey_status,
+        COUNT(*) as count
+      FROM sra_form_logs
+      GROUP BY survey_status
+      ORDER BY count DESC
+    `,
+
+    byFamilyMembers: `
+      SELECT
+        CASE
+          WHEN num_family_members IS NULL THEN 'Unknown'
+          WHEN num_family_members <= 2 THEN '1-2'
+          WHEN num_family_members BETWEEN 3 AND 4 THEN '3-4'
+          WHEN num_family_members BETWEEN 5 AND 6 THEN '5-6'
+          WHEN num_family_members > 6 THEN '7+'
+          ELSE 'Unknown'
+        END as family_size,
+        COUNT(*) as count
+      FROM sra_form_logs
+      GROUP BY family_size
+      ORDER BY family_size
+    `,
+
+    byAreaRange: `
+      SELECT
+        CASE
+          WHEN area_sq_m IS NULL THEN 'Not specified'
+          WHEN area_sq_m <= 25 THEN '0-25 sq.m'
+          WHEN area_sq_m BETWEEN 26 AND 50 THEN '26-50 sq.m'
+          WHEN area_sq_m BETWEEN 51 AND 100 THEN '51-100 sq.m'
+          WHEN area_sq_m BETWEEN 101 AND 200 THEN '101-200 sq.m'
+          ELSE '200+ sq.m'
+        END as area_range,
+        COUNT(*) as count
+      FROM sra_form_logs
+      GROUP BY area_range
+      ORDER BY area_range
+    `,
+
+    bySlumFloor: `
+      SELECT slum_floor, COUNT(*) as count
+      FROM sra_form_logs
+      WHERE slum_floor IS NOT NULL AND slum_floor != ''
+      GROUP BY slum_floor
+      ORDER BY count DESC
+    `,
+
+    byOwnership: `
+      SELECT ownership_of_slum_land, COUNT(*) as count
+      FROM sra_form_logs
+      WHERE ownership_of_slum_land IS NOT NULL AND ownership_of_slum_land != ''
+      GROUP BY ownership_of_slum_land
+      ORDER BY count DESC
+    `,
+
+    byWard: `
+      SELECT ward, COUNT(*) as count
+      FROM sra_form_logs
+      WHERE ward IS NOT NULL AND ward != ''
+      GROUP BY ward
+      ORDER BY count DESC
+      LIMIT 10
+    `,
+
+    byCluster: `
+      SELECT cluster_number, COUNT(*) as count
+      FROM sra_form_logs
+      WHERE cluster_number IS NOT NULL AND cluster_number != ''
+      GROUP BY cluster_number
+      ORDER BY count DESC
+      LIMIT 10
+    `,
+  };
 
   const results = {};
 
@@ -979,9 +1156,14 @@ exports.getSRADashboardStats = (req, res) => {
       (key) =>
         new Promise((resolve, reject) => {
           db.query(queries[key], (err, result) => {
-            if (err) reject(err);
-            results[key] = result;
-            resolve();
+            if (err) {
+              console.error(`Query failed for key [${key}]:`, err.message);
+              results[key] = [];  // error असला तरी empty array return कर
+              resolve();          // reject नाही — dashboard crash होऊ नये
+            } else {
+              results[key] = result;
+              resolve();
+            }
           });
         })
     )
