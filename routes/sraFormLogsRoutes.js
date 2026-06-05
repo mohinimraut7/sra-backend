@@ -100,5 +100,6 @@ router.put(
 router.get('/dashboard-stats', authMiddleware, sraFormLogsController.getSRADashboardStats);
 router.delete('/deletesradocs', authMiddleware, sraFormLogsController.deleteAllSRADocs);
 
+router.delete('/sra-form-logs/:id', authMiddleware, sraFormLogsController.deleteSRAFormLog);
 
 module.exports = router;

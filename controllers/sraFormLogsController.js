@@ -1238,3 +1238,29 @@ exports.getSRAFormLogById = (req, res) => {
     res.json(formattedLog);
   });
 };
+
+
+// ===================== DELETE SINGLE LOG =====================
+exports.deleteSRAFormLog = (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).json({ success: false, message: "ID required" });
+  }
+
+  db.query("DELETE FROM sra_form_logs WHERE id = ?", [id], (err, result) => {
+    if (err) {
+      return res.status(500).json({
+        success: false,
+        message: "Database error while deleting",
+        error: err.message,
+      });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: "Record not found" });
+    }
+
+    res.json({ success: true, message: "Record deleted successfully", id });
+  });
+};
